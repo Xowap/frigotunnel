@@ -12,6 +12,7 @@ class FrigoPacket : public QObject
 {
     Q_OBJECT
 public:
+    explicit FrigoPacket(QObject *parent = 0);
     FrigoPacket(FrigoMessage *message, QObject *parent = 0);
     FrigoPacket(const FrigoMessageList &messages, QObject *parent = 0);
     ~FrigoPacket();
@@ -19,11 +20,10 @@ public:
     FrigoPacket *append(FrigoMessage *message);
     FrigoPacket *append(const FrigoMessageList &messages);
 
-    FrigoPacket *operator <<(FrigoMessage *message);
-    FrigoPacket *operator <<(const FrigoMessageList &messages);
-
     QJsonObject toJson() const;
     QByteArray serialize() const;
+    static FrigoPacket *parse(const QByteArray &data, QObject *parent = 0);
+    static FrigoPacket *parse(const QJsonObject &obj, QObject *parent = 0);
 
 private:
     FrigoMessageList messages;

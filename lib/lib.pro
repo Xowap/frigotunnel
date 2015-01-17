@@ -18,7 +18,8 @@ SOURCES += frigotunnel.cpp \
 
 HEADERS += frigotunnel.h \
     frigomessage.h \
-    frigopacket.h
+    frigopacket.h \
+    common.h
 unix {
     target.path = /usr/lib
     INSTALLS += target
