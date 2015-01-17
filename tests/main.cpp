@@ -2,6 +2,7 @@
 #include <algorithm>
 
 #include "parsepackettest.h"
+#include "expiringsettest.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,6 +11,9 @@ int main(int argc, char *argv[])
 
     ParsePacketTest ppt;
     output += QTest::qExec(&ppt, argc, argv);
+
+    ExpiringSetTest est;
+    output += QTest::qExec(&est, argc, argv);
 
     return std::min(output, 1);
 }

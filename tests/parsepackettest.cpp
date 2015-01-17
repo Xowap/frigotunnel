@@ -1,5 +1,6 @@
 #include "parsepackettest.h"
 #include "frigopacket.h"
+#include "expiringset.h"
 
 #include <QFile>
 
@@ -36,6 +37,5 @@ void ParsePacketTest::testParseInvalidPacket()
 
      FrigoPacket *packet = FrigoPacket::parse(f.readAll());
 
-     QVERIFY(packet == NULL);
+      QVERIFY(packet == NULL);
 }
-

@@ -4,6 +4,8 @@
 #
 #-------------------------------------------------
 
+include(../defaults.pri)
+
 QT       += network
 
 QT       -= gui
@@ -14,12 +16,14 @@ CONFIG += staticlib
 
 SOURCES += frigotunnel.cpp \
     frigomessage.cpp \
-    frigopacket.cpp
+    frigopacket.cpp \
+    expiringset.cpp
 
 HEADERS += frigotunnel.h \
     frigomessage.h \
     frigopacket.h \
-    common.h
+    common.h \
+    expiringset.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

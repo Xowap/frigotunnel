@@ -17,12 +17,14 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 SOURCES += main.cpp \
-    parsepackettest.cpp
+    parsepackettest.cpp \
+    expiringsettest.cpp
 
 LIBS += -L../lib -lfrigotunnel
 
 HEADERS += \
-    parsepackettest.h
+    parsepackettest.h \
+    expiringsettest.h
 
 RESOURCES += \
     resources.qrc
