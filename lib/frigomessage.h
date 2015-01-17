@@ -4,6 +4,9 @@
 #include <QObject>
 #include <QJsonObject>
 #include <QStringList>
+#include <QList>
+#include <QByteArray>
+#include <QUuid>
 
 class FrigoMessage : public QObject
 {
@@ -19,9 +22,15 @@ public:
     QJsonObject getMessage() const;
     QStringList getTargets() const;
 
+    QJsonObject toJson();
+    QByteArray serialize();
+
 private:
+    QUuid uuid;
     QJsonObject message;
     QStringList targets;
 };
+
+typedef QList<FrigoMessage *> FrigoMessageList;
 
 #endif // FRIGOMESSAGE_H

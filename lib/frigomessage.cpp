@@ -1,7 +1,11 @@
 #include "frigomessage.h"
 
+#include <QJsonDocument>
+#include <QJsonArray>
+
 FrigoMessage::FrigoMessage(const QJsonObject &message, QObject *parent) :
     QObject(parent),
+    uuid(QUuid::createUuid()),
     message(message)
 {
 
@@ -9,6 +13,7 @@ FrigoMessage::FrigoMessage(const QJsonObject &message, QObject *parent) :
 
 FrigoMessage::FrigoMessage(const QJsonObject &message, const QStringList targets, QObject *parent) :
     QObject(parent),
+    uuid(QUuid::createUuid()),
     message(message),
     targets(targets)
 {
@@ -37,5 +42,26 @@ QJsonObject FrigoMessage::getMessage() const
 QStringList FrigoMessage::getTargets() const
 {
     return targets;
+}
+
+QJsonObject FrigoMessage::toJson()
+{
+    QJsonObject json;
+    QJsonArray jsonTargets;
+
+    foreach(QString target, targets) {
+        jsonTargets << target;
+    }
+
+    json["to"] = jsonTargets;
+    json["uuid"] = uuid.toString();
+    json["payload"] = getMessage();
+
+    return json;
+}
+
+QByteArray FrigoMessage::serialize()
+{
+    return QJsonDocument(toJson()).toJson();
 }
 
