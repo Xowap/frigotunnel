@@ -20,6 +20,8 @@ public:
     FrigoPacket *append(FrigoMessage *message);
     FrigoPacket *append(const FrigoMessageList &messages);
 
+    FrigoMessageList getMessages() const;
+
     QJsonObject toJson() const;
     QByteArray serialize() const;
     static FrigoPacket *parse(const QByteArray &data, QObject *parent = 0);

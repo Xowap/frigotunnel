@@ -38,6 +38,11 @@ FrigoPacket *FrigoPacket::append(const FrigoMessageList &messages)
     return this;
 }
 
+FrigoMessageList FrigoPacket::getMessages() const
+{
+    return messages;
+}
+
 QJsonObject FrigoPacket::toJson() const
 {
     QJsonObject json;

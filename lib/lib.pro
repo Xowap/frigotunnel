@@ -8,7 +8,7 @@ QT       += network
 
 QT       -= gui
 
-TARGET = lib
+TARGET = frigotunnel
 TEMPLATE = lib
 CONFIG += staticlib
 

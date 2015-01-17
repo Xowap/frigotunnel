@@ -1,0 +1,13 @@
+{
+	"protocol": "frigo",
+	"version": 1,
+	"messages": [
+		{
+			"to": ["test1", "test2"],
+			"uuid": "0a343e8f-09fc-415e-b210-67f1ff7c8a22",
+			"payload": {
+				"youpi": "tralala"
+			}
+		}
+	]
+}
