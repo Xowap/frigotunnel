@@ -13,7 +13,8 @@ FrigoMessage::FrigoMessage(QObject *parent) :
 FrigoMessage::FrigoMessage(const QJsonObject &message, QObject *parent) :
     QObject(parent),
     uuid(QUuid::createUuid()),
-    message(message)
+    message(message),
+    system(false)
 {
 }
 
@@ -21,7 +22,8 @@ FrigoMessage::FrigoMessage(const QJsonObject &message, const QStringList targets
     QObject(parent),
     uuid(QUuid::createUuid()),
     message(message),
-    targets(targets)
+    targets(targets),
+    system(false)
 {
 }
 
@@ -40,6 +42,11 @@ void FrigoMessage::to(QStringList targets)
     this->targets.append(targets);
 }
 
+void FrigoMessage::setSystem(bool system)
+{
+    this->system = system;
+}
+
 QJsonObject FrigoMessage::getMessage() const
 {
     return message;
@@ -55,6 +62,11 @@ QString FrigoMessage::getUuid() const
     return uuid.toString();
 }
 
+bool FrigoMessage::isSystem() const
+{
+    return system;
+}
+
 QJsonObject FrigoMessage::toJson()
 {
     QJsonObject json;
@@ -67,6 +79,7 @@ QJsonObject FrigoMessage::toJson()
     json["to"] = jsonTargets;
     json["uuid"] = uuid.toString();
     json["payload"] = getMessage();
+    json["system"] = isSystem();
 
     return json;
 }
@@ -90,7 +103,10 @@ FrigoMessage *FrigoMessage::parse(const QByteArray &data, QObject *parent)
 
 FrigoMessage *FrigoMessage::parse(const QJsonObject &obj, QObject *parent)
 {
-    if (!obj["to"].isArray() || !obj["uuid"].isString() || !obj["payload"].isObject()) {
+    if (!obj["to"].isArray()
+            || !obj["uuid"].isString()
+            || !obj["payload"].isObject()
+            || !obj["system"].isBool()) {
         return NULL;
     }
 
@@ -98,6 +114,7 @@ FrigoMessage *FrigoMessage::parse(const QJsonObject &obj, QObject *parent)
 
     message->message = obj["payload"].toObject();
     message->uuid = obj["uuid"].toString();
+    message->system = obj["system"].toBool();
 
     foreach (QJsonValue value, obj["to"].toArray()) {
         if (!value.isString()) {

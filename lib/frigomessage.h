@@ -19,10 +19,12 @@ public:
 
     void to(QString target);
     void to(QStringList targets);
+    void setSystem(bool system);
 
     QJsonObject getMessage() const;
     QStringList getTargets() const;
     QString getUuid() const;
+    bool isSystem() const;
 
     QJsonObject toJson();
     QByteArray serialize();
@@ -33,6 +35,7 @@ private:
     QUuid uuid;
     QJsonObject message;
     QStringList targets;
+    bool system;
 };
 
 typedef QList<FrigoMessage *> FrigoMessageList;
