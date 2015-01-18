@@ -4,8 +4,11 @@
 
 #include <QtTest/QtTest>
 #include <QtDebug>
+#include <QtEndian>
+#include <QSignalSpy>
 #include <QJsonObject>
 #include <QUdpSocket>
+#include <QTcpSocket>
 
 FrigoTunnelTest::FrigoTunnelTest(QObject *parent) : QObject(parent)
 {
@@ -64,5 +67,37 @@ void FrigoTunnelTest::udpReception()
     socket.writeDatagram(data, target, FRIGO_UDP_PORT);
 
     QTRY_COMPARE(count, 1);
+}
+
+void FrigoTunnelTest::tcpReception()
+{
+    FrigoTunnel tunnel("test");
+    QSignalSpy messageSpy(&tunnel, SIGNAL(gotMessage(QJsonObject)));
+    QJsonObject messageContent;
+    FrigoMessage message(messageContent);
+    message.to("test");
+
+    FrigoPacket packet(&message);
+
+    QTcpSocket socket;
+    QSignalSpy connectSpy(&socket, SIGNAL(connected()));
+    socket.connectToHost("localhost", FRIGO_TCP_PORT);
+
+    QTRY_VERIFY(connectSpy.count() == 1);
+
+    QByteArray data = packet.serialize();
+    qint32 size = qToLittleEndian(data.size()), sizeCheck = qToLittleEndian(size ^ FRIGO_TCP_DATA_SIZE_KEY);
+
+    socket.write((char*)(void*) &size, sizeof(qint32));
+    socket.write((char*)(void*) &sizeCheck, sizeof(qint32));
+    QTRY_VERIFY(tunnel.tcpBuffer.size() == (int) sizeof(qint32) * 2);
+
+    socket.write(data.left(10));
+    QTRY_VERIFY(tunnel.tcpBuffer.size() == ((int) sizeof(qint32) * 2) + 10);
+
+    socket.write(data.right(data.size() - 10));
+    socket.close();
+
+    QTRY_VERIFY(messageSpy.count() == 1);
 }
 

@@ -3,7 +3,9 @@
 
 #include <QObject>
 #include <QUdpSocket>
+#include <QTcpServer>
 #include <QJsonObject>
+#include <QByteArray>
 
 #include "frigopacket.h"
 #include "expiringset.h"
@@ -23,6 +25,8 @@ public:
 private slots:
     void inboundDatagram();
     void inboundPacket(FrigoPacket *packet);
+    void inboundTcpConnection();
+    void inboundTcpData();
 
 signals:
     void gotMessage(const QJsonObject &message);
@@ -31,8 +35,11 @@ private:
     QString name;
     ExpiringSet *uuidSet;
     QUdpSocket udpSocket;
+    QTcpServer tcpServer;
+    QByteArray tcpBuffer;
 
     void setupUdp();
+    void setupTcp();
 };
 
 #endif // FRIGOTUNNEL_H

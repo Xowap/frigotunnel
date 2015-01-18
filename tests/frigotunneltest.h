@@ -13,6 +13,7 @@ public:
 private slots:
     void packetPropagation();
     void udpReception();
+    void tcpReception();
 };
 
 #endif // FRIGOTUNNELTEST_H
