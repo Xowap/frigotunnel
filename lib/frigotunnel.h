@@ -35,7 +35,9 @@ private slots:
     void inboundTcpData();
     void inboundSystemMessage(const QJsonObject &message, const QHostAddress &peer);
 
+    void askHello();
     void sayHello();
+    void sayHelloAndSchedule();
     void gotHello(const QString &name, const QHostAddress &peer);
 
 signals:

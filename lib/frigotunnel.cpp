@@ -5,6 +5,7 @@
 #include <QtEndian>
 #include <QHostAddress>
 #include <QTcpSocket>
+#include <QTimer>
 
 FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
     QObject(parent),
@@ -16,7 +17,8 @@ FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
 
     setupUdp();
     setupTcp();
-    sayHello();
+    sayHelloAndSchedule();
+    askHello();
 }
 
 FrigoTunnel::~FrigoTunnel()
@@ -134,10 +136,10 @@ void FrigoTunnel::inboundSystemMessage(const QJsonObject &message, const QHostAd
     }
 }
 
-void FrigoTunnel::sayHello()
+void FrigoTunnel::askHello()
 {
     QJsonObject content;
-    content["name"] = name;
+    content["type"] = "say-hello";
 
     FrigoMessage message(content);
     message.to("*");
@@ -145,6 +147,26 @@ void FrigoTunnel::sayHello()
 
     FrigoPacket packet(&message);
     send(&packet, true);
+}
+
+void FrigoTunnel::sayHello()
+{
+    QJsonObject content;
+    content["type"] = "hello";
+    content["name"] = name;
+
+    FrigoMessage message(content);
+    message.to("*");
+    message.setSystem(true);
+
+    FrigoPacket packet(&message);
+    send(&packet);
+}
+
+void FrigoTunnel::sayHelloAndSchedule()
+{
+    sayHello();
+    QTimer::singleShot(timeoutGenerator->generate(), this, SLOT(sayHelloAndSchedule()));
 }
 
 void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)
