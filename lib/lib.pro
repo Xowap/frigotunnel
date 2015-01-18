@@ -14,16 +14,18 @@ TARGET = frigotunnel
 TEMPLATE = lib
 CONFIG += staticlib
 
-SOURCES += frigotunnel.cpp \
+SOURCES += \
     frigomessage.cpp \
     frigopacket.cpp \
-    expiringset.cpp
+    expiringset.cpp \
+    frigotunnel.cpp
 
-HEADERS += frigotunnel.h \
+HEADERS += \
     frigomessage.h \
     frigopacket.h \
     common.h \
-    expiringset.h
+    expiringset.h \
+    frigotunnel.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

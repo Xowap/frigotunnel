@@ -22,6 +22,7 @@ public:
 
     QJsonObject getMessage() const;
     QStringList getTargets() const;
+    QString getUuid() const;
 
     QJsonObject toJson();
     QByteArray serialize();

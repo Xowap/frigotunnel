@@ -1,12 +1,33 @@
 #ifndef FRIGOTUNNEL_H
 #define FRIGOTUNNEL_H
 
+#include <QObject>
+#include <QUdpSocket>
+#include <QJsonObject>
 
-class FrigoTunnel
+#include "frigopacket.h"
+#include "expiringset.h"
+
+class FrigoTunnel : public QObject
 {
-
+    Q_OBJECT
 public:
-    FrigoTunnel();
+    FrigoTunnel(QString name, QObject *parent = 0);
+    ~FrigoTunnel();
+
+private slots:
+    void inboundDatagram();
+    void inboundPacket(FrigoPacket *packet);
+
+signals:
+    void gotMessage(const QJsonObject &message);
+
+private:
+    QString name;
+    ExpiringSet *uuidSet;
+    QUdpSocket udpSocket;
+
+    void setupUdp();
 };
 
 #endif // FRIGOTUNNEL_H

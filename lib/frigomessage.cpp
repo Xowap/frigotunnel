@@ -50,6 +50,11 @@ QStringList FrigoMessage::getTargets() const
     return targets;
 }
 
+QString FrigoMessage::getUuid() const
+{
+    return uuid.toString();
+}
+
 QJsonObject FrigoMessage::toJson()
 {
     QJsonObject json;
