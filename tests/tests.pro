@@ -6,7 +6,7 @@
 
 include(../defaults.pri)
 
-QT       += core testlib
+QT       += core testlib network
 QT       -= gui
 
 TARGET = tests
@@ -18,13 +18,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     parsepackettest.cpp \
-    expiringsettest.cpp
+    expiringsettest.cpp \
+    frigotunneltest.cpp
 
 LIBS += -L../lib -lfrigotunnel
 
 HEADERS += \
     parsepackettest.h \
-    expiringsettest.h
+    expiringsettest.h \
+    frigotunneltest.h
 
 RESOURCES += \
     resources.qrc

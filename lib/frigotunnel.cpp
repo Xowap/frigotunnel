@@ -9,6 +9,7 @@ FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
     name(name),
     uuidSet(new ExpiringSet(3, FRIGO_UUID_TTL / 2, this))
 {
+    setupUdp();
 }
 
 FrigoTunnel::~FrigoTunnel()
@@ -39,7 +40,7 @@ void FrigoTunnel::inboundPacket(FrigoPacket *packet)
 {
     foreach(FrigoMessage *message, packet->getMessages()) {
         if (message->getTargets().contains(name)) {
-            if (uuidSet->contains(message->getUuid())) {
+            if (!uuidSet->contains(message->getUuid())) {
                 emit gotMessage(message->getMessage());
             }
         }
