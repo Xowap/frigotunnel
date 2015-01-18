@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QHostAddress>
 #include <QTcpSocket>
+#include <QByteArray>
 
 #include "timeoutgenerator.h"
 
@@ -15,6 +16,7 @@ public:
     ~FrigoConnection();
 
     void setHost(const QHostAddress &host);
+    void write(const QByteArray &data);
 
 private slots:
     void handleDisconnect();

@@ -22,6 +22,11 @@ void FrigoConnection::setHost(const QHostAddress &host)
     }
 }
 
+void FrigoConnection::write(const QByteArray &data)
+{
+    socket.write(data);
+}
+
 void FrigoConnection::handleDisconnect()
 {
     int timeout = timeoutGenerator->generate();

@@ -10,10 +10,11 @@
 
 #include "frigopacket.h"
 #include "expiringset.h"
+#include "frigoconnection.h"
 
 class FrigoTunnelTest;
 
-typedef QMap<QString, QHostAddress> HostMap;
+typedef QMap<QString, FrigoConnection*> ConnectionMap;
 
 class FrigoTunnel : public QObject
 {
@@ -47,7 +48,8 @@ private:
     QUdpSocket udpSocket;
     QTcpServer tcpServer;
     QByteArray tcpBuffer;
-    HostMap hosts;
+    ConnectionMap connections;
+    TimeoutGenerator *timeoutGenerator;
 
     void setupUdp();
     void setupTcp();

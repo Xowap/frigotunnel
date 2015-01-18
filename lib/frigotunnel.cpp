@@ -9,12 +9,14 @@
 FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
     QObject(parent),
     name(name),
-    uuidSet(new ExpiringSet(3, FRIGO_UUID_TTL / 2, this))
+    uuidSet(new ExpiringSet(3, FRIGO_UUID_TTL / 2, this)),
+    timeoutGenerator(new TimeoutGenerator(FRIGO_TCP_RECONNECT_MIN, FRIGO_TCP_RECONNECT_MAX, this))
 {
     connect(this, &FrigoTunnel::gotSystemMessage, this, &FrigoTunnel::inboundSystemMessage);
 
     setupUdp();
     setupTcp();
+    sayHello();
 }
 
 FrigoTunnel::~FrigoTunnel()
@@ -27,6 +29,12 @@ void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp)
     QByteArray data = packet->serialize();
     QHostAddress target(FRIGO_MULTICAST_ADDRESS);
     socket.writeDatagram(data, target, FRIGO_UDP_PORT);
+
+    if (!skipTcp) {
+        for(ConnectionMap::iterator i; i != connections.end(); i++) {
+            (*i)->write(data);
+        }
+    }
 }
 
 void FrigoTunnel::inboundDatagram()
@@ -141,7 +149,13 @@ void FrigoTunnel::sayHello()
 
 void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)
 {
-    hosts[name] = peer;
+    if (!peer.isLoopback()) {
+        if (!connections.contains(name)) {
+            connections[name] = new FrigoConnection(timeoutGenerator, this);
+        }
+
+        connections[name]->setHost(peer);
+    }
 }
 
 void FrigoTunnel::setupUdp()
@@ -157,4 +171,3 @@ void FrigoTunnel::setupTcp()
     tcpServer.listen(QHostAddress::Any, FRIGO_TCP_PORT);
     connect(&tcpServer, &QTcpServer::newConnection, this, &FrigoTunnel::inboundTcpConnection);
 }
-
