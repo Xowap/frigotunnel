@@ -17,6 +17,7 @@ private slots:
     void calcCycleAfter();
     void setFunctionning();
     void expiration();
+    void autoExpiration();
 };
 
 #endif // EXPIRINGSETTEST_H

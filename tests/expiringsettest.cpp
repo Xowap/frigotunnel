@@ -44,3 +44,13 @@ void ExpiringSetTest::expiration()
     QVERIFY(!set.contains("test"));
 }
 
+void ExpiringSetTest::autoExpiration()
+{
+    ExpiringSet set(3, 1);
+
+    set.add("test");
+
+    QVERIFY(set.contains("test"));
+    QTRY_VERIFY(!set.contains("test"));
+}
+
