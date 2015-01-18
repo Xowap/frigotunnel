@@ -33,7 +33,7 @@ void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp)
     socket.writeDatagram(data, target, FRIGO_UDP_PORT);
 
     if (!skipTcp) {
-        for(ConnectionMap::iterator i; i != connections.end(); i++) {
+        for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
             (*i)->write(data);
         }
     }
