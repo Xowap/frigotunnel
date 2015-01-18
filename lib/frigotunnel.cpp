@@ -11,12 +11,22 @@ FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
     name(name),
     uuidSet(new ExpiringSet(3, FRIGO_UUID_TTL / 2, this))
 {
+    connect(this, &FrigoTunnel::gotSystemMessage, this, &FrigoTunnel::inboundSystemMessage);
+
     setupUdp();
     setupTcp();
 }
 
 FrigoTunnel::~FrigoTunnel()
 {
+}
+
+void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp)
+{
+    QUdpSocket socket;
+    QByteArray data = packet->serialize();
+    QHostAddress target(FRIGO_MULTICAST_ADDRESS);
+    socket.writeDatagram(data, target, FRIGO_UDP_PORT);
 }
 
 void FrigoTunnel::inboundDatagram()
@@ -32,19 +42,23 @@ void FrigoTunnel::inboundDatagram()
         FrigoPacket *packet = FrigoPacket::parse(datagram);
 
         if (packet != NULL) {
-            inboundPacket(packet);
+            inboundPacket(packet, sender);
         }
 
         packet->deleteLater();
     }
 }
 
-void FrigoTunnel::inboundPacket(FrigoPacket *packet)
+void FrigoTunnel::inboundPacket(FrigoPacket *packet, const QHostAddress &peer)
 {
     foreach(FrigoMessage *message, packet->getMessages()) {
-        if (message->getTargets().contains(name)) {
+        if (message->getTargets().contains(name) || message->getTargets().contains("*")) {
             if (!uuidSet->contains(message->getUuid())) {
-                emit gotMessage(message->getMessage());
+                if (!message->isSystem()) {
+                    emit gotMessage(message->getMessage());
+                } else {
+                    emit gotSystemMessage(message->getMessage(), peer);
+                }
             }
         }
 
@@ -92,11 +106,42 @@ void FrigoTunnel::inboundTcpData()
             continue;
         }
 
-        inboundPacket(packet);
+        inboundPacket(packet, socket->peerAddress());
         packet->deleteLater();
 
         tcpBuffer = QByteArray(tcpBuffer.data() + headerSize + dataSize, tcpBuffer.size() - headerSize - dataSize);
     }
+}
+
+void FrigoTunnel::inboundSystemMessage(const QJsonObject &message, const QHostAddress &peer)
+{
+    if (message["type"] == "say-hello") {
+        sayHello();
+    } else if (message["type"] == "hello") {
+        if (message["name"].isString()) {
+            return;
+        }
+
+        gotHello(message["name"].toString(), peer);
+    }
+}
+
+void FrigoTunnel::sayHello()
+{
+    QJsonObject content;
+    content["name"] = name;
+
+    FrigoMessage message(content);
+    message.to("*");
+    message.setSystem(true);
+
+    FrigoPacket packet(&message);
+    send(&packet, true);
+}
+
+void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)
+{
+    hosts[name] = peer;
 }
 
 void FrigoTunnel::setupUdp()

@@ -29,7 +29,6 @@ FrigoMessage::FrigoMessage(const QJsonObject &message, const QStringList targets
 
 FrigoMessage::~FrigoMessage()
 {
-
 }
 
 void FrigoMessage::to(QString target)

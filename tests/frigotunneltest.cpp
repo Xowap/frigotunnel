@@ -25,7 +25,7 @@ void FrigoTunnelTest::packetPropagation()
     FrigoTunnel tunnel("test");
     QJsonObject messageContent;
     QString youpi;
-    int count;
+    int count = 0;
 
     messageContent["youpi"] = "tralala";
     FrigoMessage message(messageContent);
@@ -40,8 +40,8 @@ void FrigoTunnelTest::packetPropagation()
         count += 1;
     });
 
-    tunnel.inboundPacket(&packet);
-    tunnel.inboundPacket(&packet);
+    tunnel.inboundPacket(&packet, QHostAddress());
+    tunnel.inboundPacket(&packet, QHostAddress());
 
     QCOMPARE(youpi, QString("tralala"));
     QCOMPARE(count, 1);
@@ -49,24 +49,20 @@ void FrigoTunnelTest::packetPropagation()
 
 void FrigoTunnelTest::udpReception()
 {
-    int count;
     FrigoTunnel tunnel("test");
+    QSignalSpy messageSpy(&tunnel, SIGNAL(gotMessage(QJsonObject)));
     QJsonObject messageContent;
     FrigoMessage message(messageContent);
     message.to("test");
 
     FrigoPacket packet(&message);
 
-    connect(&tunnel, &FrigoTunnel::gotMessage, [&](QJsonObject) {
-        count += 1;
-    });
-
     QUdpSocket socket;
     QByteArray data = packet.serialize();
     QHostAddress target(FRIGO_MULTICAST_ADDRESS);
     socket.writeDatagram(data, target, FRIGO_UDP_PORT);
 
-    QTRY_COMPARE(count, 1);
+    QTRY_VERIFY(messageSpy.count() == 1);
 }
 
 void FrigoTunnelTest::tcpReception()

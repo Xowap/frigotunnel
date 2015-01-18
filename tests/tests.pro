@@ -19,14 +19,18 @@ TEMPLATE = app
 SOURCES += main.cpp \
     parsepackettest.cpp \
     expiringsettest.cpp \
-    frigotunneltest.cpp
+    frigotunneltest.cpp \
+    frigoconnectiontest.cpp \
+    timeoutgeneratortest.cpp
 
 LIBS += -L../lib -lfrigotunnel
 
 HEADERS += \
     parsepackettest.h \
     expiringsettest.h \
-    frigotunneltest.h
+    frigotunneltest.h \
+    frigoconnectiontest.h \
+    timeoutgeneratortest.h
 
 RESOURCES += \
     resources.qrc

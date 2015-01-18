@@ -4,6 +4,8 @@
 #include "parsepackettest.h"
 #include "expiringsettest.h"
 #include "frigotunneltest.h"
+#include "frigoconnectiontest.h"
+#include "timeoutgeneratortest.h"
 
 int main(int argc, char *argv[])
 {
@@ -18,6 +20,12 @@ int main(int argc, char *argv[])
 
     FrigoTunnelTest ftt;
     output += QTest::qExec(&ftt, argc, argv);
+
+    FrigoConnectionTest fct;
+    output += QTest::qExec(&fct, argc, argv);
+
+    TimeoutGeneratorTest tgt;
+    output += QTest::qExec(&tgt, argc, argv);
 
     return std::min(output, 1);
 }

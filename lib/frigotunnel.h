@@ -6,11 +6,14 @@
 #include <QTcpServer>
 #include <QJsonObject>
 #include <QByteArray>
+#include <QMap>
 
 #include "frigopacket.h"
 #include "expiringset.h"
 
 class FrigoTunnelTest;
+
+typedef QMap<QString, QHostAddress> HostMap;
 
 class FrigoTunnel : public QObject
 {
@@ -22,14 +25,21 @@ public:
     FrigoTunnel(QString name, QObject *parent = 0);
     ~FrigoTunnel();
 
+    void send(FrigoPacket *packet, bool skipTcp = false);
+
 private slots:
     void inboundDatagram();
-    void inboundPacket(FrigoPacket *packet);
+    void inboundPacket(FrigoPacket *packet, const QHostAddress &peer);
     void inboundTcpConnection();
     void inboundTcpData();
+    void inboundSystemMessage(const QJsonObject &message, const QHostAddress &peer);
+
+    void sayHello();
+    void gotHello(const QString &name, const QHostAddress &peer);
 
 signals:
     void gotMessage(const QJsonObject &message);
+    void gotSystemMessage(const QJsonObject &message, const QHostAddress &peer);
 
 private:
     QString name;
@@ -37,6 +47,7 @@ private:
     QUdpSocket udpSocket;
     QTcpServer tcpServer;
     QByteArray tcpBuffer;
+    HostMap hosts;
 
     void setupUdp();
     void setupTcp();
