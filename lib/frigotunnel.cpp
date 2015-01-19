@@ -128,7 +128,7 @@ void FrigoTunnel::inboundSystemMessage(const QJsonObject &message, const QHostAd
     if (message["type"] == "say-hello") {
         sayHello();
     } else if (message["type"] == "hello") {
-        if (message["name"].isString()) {
+        if (!message["name"].isString()) {
             return;
         }
 
