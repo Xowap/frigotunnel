@@ -45,6 +45,13 @@ When a regular message is sent, it is sent first through the UDP socket, and
 then through each currently open TCP socket, in case the UDP packet didn't make
 it.
 
+Changelog
+---------
+
+### Version 1.0.0
+
+- Initial Public Version
+- Can send/receive reliable unicast or multicast messages
 
 Copyright
 ---------
