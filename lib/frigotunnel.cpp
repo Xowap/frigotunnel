@@ -39,6 +39,11 @@ void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp)
     }
 }
 
+const ConnectionMap FrigoTunnel::getConnections()
+{
+    return connections;
+}
+
 void FrigoTunnel::inboundDatagram()
 {
     while (udpSocket.hasPendingDatagrams()) {

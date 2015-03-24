@@ -22,6 +22,11 @@ void FrigoConnection::setHost(const QHostAddress &host)
     }
 }
 
+const QHostAddress FrigoConnection::getHost()
+{
+    return host;
+}
+
 void FrigoConnection::write(const QByteArray &data)
 {
     socket.write(data);

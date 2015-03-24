@@ -16,6 +16,7 @@ public:
     ~FrigoConnection();
 
     void setHost(const QHostAddress &host);
+    const QHostAddress getHost();
     void write(const QByteArray &data);
 
 private slots:

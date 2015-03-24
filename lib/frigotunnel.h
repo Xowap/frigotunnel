@@ -27,6 +27,7 @@ public:
     ~FrigoTunnel();
 
     void send(FrigoPacket *packet, bool skipTcp = false);
+    const ConnectionMap getConnections();
 
 private slots:
     void inboundDatagram();
