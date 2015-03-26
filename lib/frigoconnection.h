@@ -25,7 +25,7 @@ private slots:
 
 private:
     QHostAddress host;
-    QTcpSocket socket;
+    QTcpSocket *socket;
     TimeoutGenerator *timeoutGenerator;
 };
 

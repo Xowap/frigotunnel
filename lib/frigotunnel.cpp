@@ -32,9 +32,12 @@ void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp)
     QHostAddress target(FRIGO_MULTICAST_ADDRESS);
     socket.writeDatagram(data, target, FRIGO_UDP_PORT);
 
+    qDebug() << "Sending packet...";
+
     if (!skipTcp) {
         for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
             (*i)->write(data);
+            qDebug() << " ... to" << i.value()->getHost();
         }
     }
 }
@@ -166,6 +169,8 @@ void FrigoTunnel::sayHello()
 
     FrigoPacket packet(&message);
     send(&packet);
+
+    qDebug() << "Said Hello";
 }
 
 void FrigoTunnel::sayHelloAndSchedule()
