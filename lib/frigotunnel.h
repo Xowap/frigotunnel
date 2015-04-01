@@ -40,6 +40,7 @@ private slots:
     void sayHello();
     void sayHelloAndSchedule();
     void gotHello(const QString &name, const QHostAddress &peer);
+    void bindUdp();
 
 signals:
     void gotMessage(const QJsonObject &message);

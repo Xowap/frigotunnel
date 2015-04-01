@@ -198,9 +198,26 @@ void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)
 void FrigoTunnel::setupUdp()
 {
     connect(&udpSocket, SIGNAL(readyRead()), this, SLOT(inboundDatagram()));
+    bindUdp();
+}
+
+void FrigoTunnel::bindUdp()
+{
     QHostAddress bindAddress(FRIGO_MULTICAST_ADDRESS);
-    udpSocket.bind(QHostAddress::AnyIPv4, FRIGO_UDP_PORT);
-    udpSocket.joinMulticastGroup(bindAddress);
+
+    if (udpSocket.state() != QUdpSocket::BoundState) {
+        qDebug() << "Binding UDP socket to" << bindAddress;
+        udpSocket.bind(QHostAddress::AnyIPv4, FRIGO_UDP_PORT, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
+    }
+
+    if (udpSocket.state() == QUdpSocket::BoundState) {
+        qDebug() << "Joining multicast group" << bindAddress;
+        udpSocket.joinMulticastGroup(bindAddress);
+    } else {
+        qWarning() << "UDP SOCKET IS NOT BOUND AND I HAVE NO CLUE WHY";
+    }
+
+    QTimer::singleShot(timeoutGenerator->generate(), this, SLOT(bindUdp()));
 }
 
 void FrigoTunnel::setupTcp()

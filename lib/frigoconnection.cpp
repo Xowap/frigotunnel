@@ -38,6 +38,7 @@ void FrigoConnection::write(const QByteArray &data)
 
 void FrigoConnection::handleError(QAbstractSocket::SocketError)
 {
+    qDebug() << "Connection lost with" << host;
     QTimer::singleShot(FT_TCP_RETRY_TIMEOUT, this, SLOT(connectSocket()));
 }
 
@@ -52,8 +53,8 @@ void FrigoConnection::connectSocket()
     connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(handleError(QAbstractSocket::SocketError)));
 
     int enableKeepAlive = 1;
-    int maxIdle = 10 /* seconds */;
-    int cntToFail = 3;
+    int maxIdle = 1 /* seconds */;
+    int cntToFail = 1;
     int interval = 1;
     int fd = socket->socketDescriptor();
 
@@ -61,4 +62,16 @@ void FrigoConnection::connectSocket()
     setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &maxIdle, sizeof(maxIdle));
     setsockopt(fd, SOL_TCP, TCP_KEEPCNT, &cntToFail, sizeof(cntToFail));
     setsockopt(fd, SOL_TCP ,TCP_KEEPINTVL, &interval, sizeof(interval));
+
+    QTimer::singleShot(FT_TCP_CONNECT_TIMEOUT, this, SLOT(checkConnected()));
+}
+
+void FrigoConnection::checkConnected()
+{
+    if (socket->state() != QTcpSocket::ConnectedState) {
+        qDebug() << "Connection timeout to" << host;
+        QTimer::singleShot(FT_TCP_RETRY_TIMEOUT, this, SLOT(connectSocket()));
+    } else {
+        qDebug() << "Connected to" << host;
+    }
 }
