@@ -8,11 +8,13 @@
 
 #include "timeoutgenerator.h"
 
+#define FT_TCP_RETRY_TIMEOUT 1000
+
 class FrigoConnection : public QObject
 {
     Q_OBJECT
 public:
-    explicit FrigoConnection(TimeoutGenerator *timeoutGenerator, QObject *parent = 0);
+    explicit FrigoConnection(QObject *parent = 0);
     ~FrigoConnection();
 
     void setHost(const QHostAddress &host);
@@ -20,13 +22,12 @@ public:
     void write(const QByteArray &data);
 
 private slots:
-    void handleDisconnect();
+    void handleError(QAbstractSocket::SocketError);
     void connectSocket();
 
 private:
     QHostAddress host;
     QTcpSocket *socket;
-    TimeoutGenerator *timeoutGenerator;
 };
 
 #endif // FRIGOCONNECTION_H

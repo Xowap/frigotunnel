@@ -188,7 +188,7 @@ void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)
 {
     if (!peer.isLoopback()) {
         if (!connections.contains(name)) {
-            connections[name] = new FrigoConnection(timeoutGenerator, this);
+            connections[name] = new FrigoConnection(this);
         }
 
         connections[name]->setHost(peer);
