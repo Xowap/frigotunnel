@@ -10,7 +10,8 @@
 
 FrigoConnection::FrigoConnection(QObject *parent) :
     QObject(parent),
-    socket(new QTcpSocket(this))
+    socket(new QTcpSocket(this)),
+    errorMatters(false)
 {
 }
 
@@ -38,12 +39,15 @@ void FrigoConnection::write(const QByteArray &data)
 
 void FrigoConnection::handleError(QAbstractSocket::SocketError)
 {
-    qDebug() << "Connection lost with" << host;
-    QTimer::singleShot(FT_TCP_RETRY_TIMEOUT, this, SLOT(connectSocket()));
+    if (errorMatters) {
+        qDebug() << "Connection lost with" << host;
+        QTimer::singleShot(FT_TCP_RETRY_TIMEOUT, this, SLOT(connectSocket()));
+    }
 }
 
 void FrigoConnection::connectSocket()
 {
+    errorMatters = false;
     socket->deleteLater();
     socket = new QTcpSocket();
 
@@ -73,5 +77,6 @@ void FrigoConnection::checkConnected()
         QTimer::singleShot(FT_TCP_RETRY_TIMEOUT, this, SLOT(connectSocket()));
     } else {
         qDebug() << "Connected to" << host;
+        errorMatters = true;
     }
 }

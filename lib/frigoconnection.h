@@ -30,6 +30,7 @@ private slots:
 private:
     QHostAddress host;
     QTcpSocket *socket;
+    bool errorMatters;
 };
 
 #endif // FRIGOCONNECTION_H
