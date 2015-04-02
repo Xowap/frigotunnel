@@ -11,6 +11,7 @@ FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
     QObject(parent),
     name(name),
     uuidSet(new ExpiringSet(3, FRIGO_UUID_TTL / 2, this)),
+    udpSocket(new QUdpSocket(this)),
     timeoutGenerator(new TimeoutGenerator(FRIGO_TCP_RECONNECT_MIN, FRIGO_TCP_RECONNECT_MAX, this))
 {
     connect(this, &FrigoTunnel::gotSystemMessage, this, &FrigoTunnel::inboundSystemMessage);
@@ -54,13 +55,13 @@ const ConnectionMap FrigoTunnel::getConnections()
 
 void FrigoTunnel::inboundDatagram()
 {
-    while (udpSocket.hasPendingDatagrams()) {
+    while (udpSocket->hasPendingDatagrams()) {
         QByteArray datagram;
         QHostAddress sender;
         quint16 senderPort;
 
-        datagram.resize(udpSocket.pendingDatagramSize());
-        udpSocket.readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
+        datagram.resize(udpSocket->pendingDatagramSize());
+        udpSocket->readDatagram(datagram.data(), datagram.size(), &sender, &senderPort);
 
         FrigoPacket *packet = FrigoPacket::parse(datagram);
 
@@ -197,7 +198,6 @@ void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)
 
 void FrigoTunnel::setupUdp()
 {
-    connect(&udpSocket, SIGNAL(readyRead()), this, SLOT(inboundDatagram()));
     bindUdp();
 }
 
@@ -205,19 +205,21 @@ void FrigoTunnel::bindUdp()
 {
     QHostAddress bindAddress(FRIGO_MULTICAST_ADDRESS);
 
-    if (udpSocket.state() != QUdpSocket::BoundState) {
-        qDebug() << "Binding UDP socket to" << bindAddress;
-        udpSocket.bind(QHostAddress::AnyIPv4, FRIGO_UDP_PORT, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
-    }
+    udpSocket->deleteLater();
+    udpSocket = new QUdpSocket(this);
 
-    if (udpSocket.state() == QUdpSocket::BoundState) {
+    qDebug() << "Binding UDP socket to" << bindAddress;
+    udpSocket->bind(QHostAddress::AnyIPv4, FRIGO_UDP_PORT, QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint);
+
+    if (udpSocket->state() == QUdpSocket::BoundState) {
         qDebug() << "Joining multicast group" << bindAddress;
-        udpSocket.joinMulticastGroup(bindAddress);
+        udpSocket->joinMulticastGroup(bindAddress);
     } else {
         qWarning() << "UDP SOCKET IS NOT BOUND AND I HAVE NO CLUE WHY";
     }
 
     QTimer::singleShot(timeoutGenerator->generate(), this, SLOT(bindUdp()));
+    connect(udpSocket, SIGNAL(readyRead()), this, SLOT(inboundDatagram()));
 }
 
 void FrigoTunnel::setupTcp()

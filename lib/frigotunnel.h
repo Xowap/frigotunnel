@@ -49,7 +49,7 @@ signals:
 private:
     QString name;
     ExpiringSet *uuidSet;
-    QUdpSocket udpSocket;
+    QUdpSocket *udpSocket;
     QTcpServer tcpServer;
     QByteArray tcpBuffer;
     ConnectionMap connections;
