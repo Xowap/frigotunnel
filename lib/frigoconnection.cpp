@@ -58,7 +58,7 @@ void FrigoConnection::connectSocket()
 
     int enableKeepAlive = 1;
     int maxIdle = 1 /* seconds */;
-    int cntToFail = 1;
+    int cntToFail = 3;
     int interval = 1;
     int fd = socket->socketDescriptor();
 
