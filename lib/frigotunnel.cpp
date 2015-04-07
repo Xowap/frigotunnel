@@ -188,6 +188,19 @@ void FrigoTunnel::sayHelloAndSchedule()
 void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)
 {
     if (!peer.isLoopback()) {
+        QStringList toDelete;
+
+        for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
+            if (i.value()->getHost() == peer && i.key() != name) {
+                i.value()->deleteLater();
+                toDelete << i.key();
+            }
+        }
+
+        for (auto key : toDelete) {
+            connections.remove(key);
+        }
+
         if (!connections.contains(name)) {
             connections[name] = new FrigoConnection(this);
         }
