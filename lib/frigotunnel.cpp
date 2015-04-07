@@ -213,6 +213,7 @@ void FrigoTunnel::bindUdp()
 
     if (udpSocket->state() == QUdpSocket::BoundState) {
         qDebug() << "Joining multicast group" << bindAddress;
+        udpSocket->leaveMulticastGroup(bindAddress);
         udpSocket->joinMulticastGroup(bindAddress);
     } else {
         qWarning() << "UDP SOCKET IS NOT BOUND AND I HAVE NO CLUE WHY";
