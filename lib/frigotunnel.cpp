@@ -18,27 +18,28 @@ FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
 
     setupUdp();
     setupTcp();
-    sayHelloAndSchedule();
     askHello();
+
+    connect(&helloTimer, &QTimer::timeout, this, &FrigoTunnel::sayHello);
+    helloTimer.setInterval(FRIGO_HELLO_INTERVAL_MSEC);
+    helloTimer.start();
 }
 
 FrigoTunnel::~FrigoTunnel()
 {
 }
 
-void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp)
+void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp, int udpSends)
 {
     QUdpSocket socket;
     QByteArray data = packet->serialize();
     QHostAddress target(FRIGO_MULTICAST_ADDRESS);
 
-    socket.writeDatagram(data, target, FRIGO_UDP_PORT);
-    socket.writeDatagram(data, target, FRIGO_UDP_PORT);
-    socket.writeDatagram(data, target, FRIGO_UDP_PORT);
-    socket.writeDatagram(data, target, FRIGO_UDP_PORT);
-    socket.writeDatagram(data, target, FRIGO_UDP_PORT);
+    for (int i; i < udpSends; i += 1) {
+        socket.writeDatagram(data, target, FRIGO_UDP_PORT);
+    }
 
-    qDebug() << "Sending packet...";
+    qDebug() << "Sending packet..." << skipTcp << udpSends;
 
     if (!skipTcp) {
         for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
@@ -174,15 +175,9 @@ void FrigoTunnel::sayHello()
     message.setSystem(true);
 
     FrigoPacket packet(&message);
-    send(&packet);
+    send(&packet, true, 1);
 
     qDebug() << "Said Hello";
-}
-
-void FrigoTunnel::sayHelloAndSchedule()
-{
-    sayHello();
-    QTimer::singleShot(timeoutGenerator->generate(), this, SLOT(sayHelloAndSchedule()));
 }
 
 void FrigoTunnel::gotHello(const QString &name, const QHostAddress &peer)

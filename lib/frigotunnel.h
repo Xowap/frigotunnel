@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QByteArray>
 #include <QMap>
+#include <QTimer>
 
 #include "frigopacket.h"
 #include "expiringset.h"
@@ -26,7 +27,7 @@ public:
     FrigoTunnel(QString name, QObject *parent = 0);
     ~FrigoTunnel();
 
-    void send(FrigoPacket *packet, bool skipTcp = false);
+    void send(FrigoPacket *packet, bool skipTcp = false, int udpSends = 5);
     const ConnectionMap getConnections();
 
 private slots:
@@ -38,7 +39,6 @@ private slots:
 
     void askHello();
     void sayHello();
-    void sayHelloAndSchedule();
     void gotHello(const QString &name, const QHostAddress &peer);
     void bindUdp();
 
@@ -54,6 +54,7 @@ private:
     QByteArray tcpBuffer;
     ConnectionMap connections;
     TimeoutGenerator *timeoutGenerator;
+    QTimer helloTimer;
 
     void setupUdp();
     void setupTcp();
