@@ -6,6 +6,7 @@
 #include "frigotunneltest.h"
 #include "frigoconnectiontest.h"
 #include "timeoutgeneratortest.h"
+#include "frigoclocktest.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,6 +27,9 @@ int main(int argc, char *argv[])
 
     TimeoutGeneratorTest tgt;
     output += QTest::qExec(&tgt, argc, argv);
+
+    FrigoClockTest clkt;
+    output += QTest::qExec(&clkt, argc, argv);
 
     return std::min(output, 1);
 }

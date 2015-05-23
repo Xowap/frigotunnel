@@ -20,7 +20,8 @@ SOURCES += \
     expiringset.cpp \
     frigotunnel.cpp \
     frigoconnection.cpp \
-    timeoutgenerator.cpp
+    timeoutgenerator.cpp \
+    frigoclock.cpp
 
 HEADERS += \
     frigomessage.h \
@@ -29,7 +30,8 @@ HEADERS += \
     expiringset.h \
     frigotunnel.h \
     frigoconnection.h \
-    timeoutgenerator.h
+    timeoutgenerator.h \
+    frigoclock.h
 unix {
     target.path = /usr/lib
     INSTALLS += target

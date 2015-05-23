@@ -21,7 +21,8 @@ SOURCES += main.cpp \
     expiringsettest.cpp \
     frigotunneltest.cpp \
     frigoconnectiontest.cpp \
-    timeoutgeneratortest.cpp
+    timeoutgeneratortest.cpp \
+    frigoclocktest.cpp
 
 LIBS += -L../lib -lfrigotunnel
 
@@ -30,7 +31,8 @@ HEADERS += \
     expiringsettest.h \
     frigotunneltest.h \
     frigoconnectiontest.h \
-    timeoutgeneratortest.h
+    timeoutgeneratortest.h \
+    frigoclocktest.h
 
 RESOURCES += \
     resources.qrc
