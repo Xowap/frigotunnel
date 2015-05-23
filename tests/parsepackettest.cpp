@@ -39,3 +39,14 @@ void ParsePacketTest::testParseInvalidPacket()
 
       QVERIFY(packet == NULL);
 }
+
+void ParsePacketTest::testSenderFollowUp()
+{
+    QFile f(":/tests/packet1.json");
+
+    QCOMPARE(f.open(QFile::ReadOnly), true);
+
+    FrigoPacket *packet = FrigoPacket::parse(f.readAll());
+
+    QCOMPARE(packet->getSenderId(), QString("super-sender"));
+}

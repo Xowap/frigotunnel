@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QUdpSocket>
 #include <QTcpSocket>
+#include <QElapsedTimer>
 
 FrigoTunnelTest::FrigoTunnelTest(QObject *parent) : QObject(parent)
 {
@@ -45,6 +46,30 @@ void FrigoTunnelTest::packetPropagation()
 
     QCOMPARE(youpi, QString("tralala"));
     QCOMPARE(count, 1);
+}
+
+void FrigoTunnelTest::delayedPacketPropagation()
+{
+    FrigoTunnel *tunnel = new FrigoTunnel("test");
+    QJsonObject messageContent;
+    QSignalSpy messageSpy(tunnel, SIGNAL(gotMessage(QJsonObject)));
+
+    FrigoMessage message(messageContent);
+    message.to("*");
+    message.setDelay(100);
+
+    FrigoPacket packet(&message);
+    tunnel->inboundPacket(&packet, QHostAddress());
+
+    QCOMPARE(messageSpy.count(), 0);
+
+    QTest::qWait(95);
+    QCOMPARE(messageSpy.count(), 0);
+
+    QTest::qWait(10);
+    QCOMPARE(messageSpy.count(), 1);
+
+    tunnel->deleteLater();
 }
 
 void FrigoTunnelTest::udpReception()

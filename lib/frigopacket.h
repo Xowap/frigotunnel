@@ -21,6 +21,14 @@ public:
     FrigoPacket *append(const FrigoMessageList &messages);
 
     FrigoMessageList getMessages() const;
+    qint64 getTime() const;
+    qint64 getShift() const;
+    void setShift(const qint64 &value);
+    qint64 getBaseShift() const;
+    void setBaseShift(const qint64 &value);
+    QString getSenderId() const;
+
+    int getLatenessMsec();
 
     QJsonObject toJson() const;
     QByteArray serialize() const;
@@ -29,6 +37,10 @@ public:
 
 private:
     FrigoMessageList messages;
+    qint64 time;
+    qint64 shift;
+    qint64 baseShift;
+    QString senderId;
 };
 
 #endif // FRIGOPACKET_H

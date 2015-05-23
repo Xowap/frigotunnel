@@ -1,6 +1,7 @@
 #include "frigotunnel.h"
 #include "common.h"
 #include "frigopacket.h"
+#include "frigoclock.h"
 
 #include <QtEndian>
 #include <QHostAddress>
@@ -54,6 +55,12 @@ const ConnectionMap FrigoTunnel::getConnections()
     return connections;
 }
 
+QString FrigoTunnel::getSenderId()
+{
+    static QString senderId = QUuid::createUuid().toString();
+    return senderId;
+}
+
 void FrigoTunnel::inboundDatagram()
 {
     while (udpSocket->hasPendingDatagrams()) {
@@ -74,15 +81,38 @@ void FrigoTunnel::inboundDatagram()
     }
 }
 
-void FrigoTunnel::inboundPacket(FrigoPacket *packet, const QHostAddress &peer)
+void FrigoTunnel::inboundPacket(FrigoPacket *packet, QHostAddress peer)
 {
+    accountShift(packet, peer);
+    int lateness = packet->getLatenessMsec();
+
     foreach(FrigoMessage *message, packet->getMessages()) {
         if (message->getTargets().contains(name) || message->getTargets().contains("*")) {
             if (!uuidSet->contains(message->getUuid())) {
-                if (!message->isSystem()) {
-                    emit gotMessage(message->getMessage());
-                } else {
-                    emit gotSystemMessage(message->getMessage(), peer);
+                qDebug() << "Packet in! " + QString::number(lateness) + "ms late.";
+
+                QJsonObject jsonMessage = message->getMessage();
+                bool isSystem = message->isSystem();
+
+                auto propagateMessage = [=]() {
+                    if (!isSystem) {
+                        emit gotMessage(jsonMessage);
+                    } else {
+                        emit gotSystemMessage(jsonMessage, peer);
+                    }
+                };
+
+                if (message->getDelay() < 0) {
+                    propagateMessage();
+                } else if (lateness <= message->getDelay()) {
+                    QTimer *timer = new QTimer();
+                    timer->setSingleShot(true);
+                    timer->setTimerType(Qt::PreciseTimer);
+                    connect(timer, &QTimer::timeout, [=]() {
+                        propagateMessage();
+                        timer->deleteLater();
+                    });
+                    timer->start(message->getDelay() - lateness);
                 }
             }
         }
@@ -235,4 +265,21 @@ void FrigoTunnel::setupTcp()
 {
     tcpServer.listen(QHostAddress::Any, FRIGO_TCP_PORT);
     connect(&tcpServer, &QTcpServer::newConnection, this, &FrigoTunnel::inboundTcpConnection);
+}
+
+void FrigoTunnel::accountShift(FrigoPacket *packet, const QHostAddress &peer)
+{
+    qint64 shift = FrigoClock::getTime() - packet->getTime();
+    QString remoteId = peer.toString() + "/" + packet->getSenderId();
+
+    if (!shifts.contains(remoteId)) {
+        shifts[remoteId] = shift;
+    }
+
+    if (shifts[remoteId] > shift) {
+        shifts[remoteId] = shift;
+    }
+
+    packet->setShift(shift);
+    packet->setBaseShift(shifts[remoteId]);
 }

@@ -16,6 +16,7 @@
 class FrigoTunnelTest;
 
 typedef QMap<QString, FrigoConnection*> ConnectionMap;
+typedef QMap<QString, qint64> ShiftMap;
 
 class FrigoTunnel : public QObject
 {
@@ -30,9 +31,11 @@ public:
     void send(FrigoPacket *packet, bool skipTcp = false, int udpSends = 5);
     const ConnectionMap getConnections();
 
+    static QString getSenderId();
+
 private slots:
     void inboundDatagram();
-    void inboundPacket(FrigoPacket *packet, const QHostAddress &peer);
+    void inboundPacket(FrigoPacket *packet, QHostAddress peer);
     void inboundTcpConnection();
     void inboundTcpData();
     void inboundSystemMessage(const QJsonObject &message, const QHostAddress &peer);
@@ -55,9 +58,12 @@ private:
     ConnectionMap connections;
     TimeoutGenerator *timeoutGenerator;
     QTimer helloTimer;
+    ShiftMap shifts;
 
     void setupUdp();
     void setupTcp();
+
+    void accountShift(FrigoPacket *packet, const QHostAddress &peer);
 };
 
 #endif // FRIGOTUNNEL_H

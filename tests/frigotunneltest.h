@@ -12,6 +12,7 @@ public:
 
 private slots:
     void packetPropagation();
+    void delayedPacketPropagation();
     void udpReception();
     void tcpReception();
 };

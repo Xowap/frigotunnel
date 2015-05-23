@@ -6,7 +6,8 @@
 #include <QJsonValue>
 
 FrigoMessage::FrigoMessage(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    delay(-1)
 {
 }
 
@@ -14,7 +15,8 @@ FrigoMessage::FrigoMessage(const QJsonObject &message, QObject *parent) :
     QObject(parent),
     uuid(QUuid::createUuid()),
     message(message),
-    system(false)
+    system(false),
+    delay(-1)
 {
 }
 
@@ -23,7 +25,8 @@ FrigoMessage::FrigoMessage(const QJsonObject &message, const QStringList targets
     uuid(QUuid::createUuid()),
     message(message),
     targets(targets),
-    system(false)
+    system(false),
+    delay(-1)
 {
 }
 
@@ -66,6 +69,16 @@ bool FrigoMessage::isSystem() const
     return system;
 }
 
+qint64 FrigoMessage::getDelay() const
+{
+    return delay;
+}
+
+void FrigoMessage::setDelay(const qint64 &value)
+{
+    delay = value;
+}
+
 QJsonObject FrigoMessage::toJson()
 {
     QJsonObject json;
@@ -79,6 +92,7 @@ QJsonObject FrigoMessage::toJson()
     json["uuid"] = uuid.toString();
     json["payload"] = getMessage();
     json["system"] = isSystem();
+    json["delay"] = getDelay();
 
     return json;
 }
@@ -105,7 +119,8 @@ FrigoMessage *FrigoMessage::parse(const QJsonObject &obj, QObject *parent)
     if (!obj["to"].isArray()
             || !obj["uuid"].isString()
             || !obj["payload"].isObject()
-            || !obj["system"].isBool()) {
+            || !obj["system"].isBool()
+            || !obj["delay"].isDouble()) {
         return NULL;
     }
 
@@ -114,6 +129,7 @@ FrigoMessage *FrigoMessage::parse(const QJsonObject &obj, QObject *parent)
     message->message = obj["payload"].toObject();
     message->uuid = obj["uuid"].toString();
     message->system = obj["system"].toBool();
+    message->delay = obj["delay"].toDouble();
 
     foreach (QJsonValue value, obj["to"].toArray()) {
         if (!value.isString()) {
@@ -125,4 +141,3 @@ FrigoMessage *FrigoMessage::parse(const QJsonObject &obj, QObject *parent)
 
     return message;
 }
-

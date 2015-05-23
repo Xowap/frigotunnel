@@ -1,14 +1,17 @@
 {
-	"protocol": "frigo",
-	"version": 1,
-	"messages": [
-		{
-			"to": ["test1", "test2"],
-			"uuid": "0a343e8f-09fc-415e-b210-67f1ff7c8a22",
-			"system": true,
-			"payload": {
-				"youpi": "tralala"
-			}
-		}
-	]
+    "protocol": "frigo",
+    "version": 2,
+    "sender-id": "super-sender",
+    "time": "0",
+    "messages": [
+        {
+            "to": ["test1", "test2"],
+            "uuid": "0a343e8f-09fc-415e-b210-67f1ff7c8a22",
+            "system": true,
+            "delay": -1,
+            "payload": {
+                "youpi": "tralala"
+            }
+        }
+    ]
 }

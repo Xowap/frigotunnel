@@ -25,6 +25,8 @@ public:
     QStringList getTargets() const;
     QString getUuid() const;
     bool isSystem() const;
+    qint64 getDelay() const;
+    void setDelay(const qint64 &value);
 
     QJsonObject toJson();
     QByteArray serialize();
@@ -36,6 +38,7 @@ private:
     QJsonObject message;
     QStringList targets;
     bool system;
+    qint64 delay;
 };
 
 typedef QList<FrigoMessage *> FrigoMessageList;

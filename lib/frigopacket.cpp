@@ -1,4 +1,6 @@
 #include "frigopacket.h"
+#include "frigoclock.h"
+#include "frigotunnel.h"
 #include "common.h"
 
 #include <QJsonArray>
@@ -43,6 +45,41 @@ FrigoMessageList FrigoPacket::getMessages() const
     return messages;
 }
 
+qint64 FrigoPacket::getTime() const
+{
+    return time;
+}
+
+qint64 FrigoPacket::getShift() const
+{
+    return shift;
+}
+
+void FrigoPacket::setShift(const qint64 &value)
+{
+    shift = value;
+}
+
+qint64 FrigoPacket::getBaseShift() const
+{
+    return baseShift;
+}
+
+void FrigoPacket::setBaseShift(const qint64 &value)
+{
+    baseShift = value;
+}
+
+QString FrigoPacket::getSenderId() const
+{
+    return senderId;
+}
+
+int FrigoPacket::getLatenessMsec()
+{
+    return (shift - baseShift) / 1000000;
+}
+
 QJsonObject FrigoPacket::toJson() const
 {
     QJsonObject json;
@@ -55,6 +92,8 @@ QJsonObject FrigoPacket::toJson() const
     json["protocol"] = "frigo";
     json["version"] = FRIGO_PROTOCOL_VERSION;
     json["messages"] = messages;
+    json["sender-id"] = FrigoTunnel::getSenderId();
+    json["time"] = QString::number(FrigoClock::getTime());
 
     return json;
 }
@@ -80,11 +119,22 @@ FrigoPacket *FrigoPacket::parse(const QJsonObject &obj, QObject *parent)
 {
     if (obj["protocol"] != "frigo"
             || obj["version"] != FRIGO_PROTOCOL_VERSION
-            || !obj["messages"].isArray()) {
+            || !obj["messages"].isArray()
+            || !obj["time"].isString()
+            || !obj["sender-id"].isString()) {
         return NULL;
     }
 
     FrigoPacket *packet = new FrigoPacket(parent);
+
+    bool timeOk;
+    packet->time = obj["time"].toString().toLongLong(&timeOk);
+
+    if (!timeOk) {
+        return NULL;
+    }
+
+    packet->senderId = obj["sender-id"].toString();
 
     foreach(QJsonValue value, obj["messages"].toArray()) {
         if (!value.isObject()) {
@@ -102,4 +152,3 @@ FrigoPacket *FrigoPacket::parse(const QJsonObject &obj, QObject *parent)
 
     return packet;
 }
-
