@@ -36,7 +36,7 @@ void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp, int udpSends)
     QByteArray data = packet->serialize();
     QHostAddress target(FRIGO_MULTICAST_ADDRESS);
 
-    for (int i; i < udpSends; i += 1) {
+    for (int i = 0; i < udpSends; i += 1) {
         socket.writeDatagram(data, target, FRIGO_UDP_PORT);
     }
 
