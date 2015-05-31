@@ -77,7 +77,8 @@ void FrigoTunnel::inboundDatagram()
             inboundPacket(packet, sender);
         }
 
-        packet->deleteLater();
+        // Delete the packet in 10s, when nobody needs it anymore
+        QTimer::singleShot(10000, packet, SLOT(deleteLater()));
     }
 }
 
@@ -162,7 +163,9 @@ void FrigoTunnel::inboundTcpData()
         }
 
         inboundPacket(packet, socket->peerAddress());
-        packet->deleteLater();
+
+        // Delete the packet in 10s, when nobody needs it anymore
+        QTimer::singleShot(10000, packet, SLOT(deleteLater()));
 
         tcpBuffer = QByteArray(tcpBuffer.data() + headerSize + dataSize, tcpBuffer.size() - headerSize - dataSize);
     }

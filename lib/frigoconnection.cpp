@@ -34,7 +34,9 @@ const QHostAddress FrigoConnection::getHost()
 
 void FrigoConnection::write(const QByteArray &data)
 {
-    socket->write(data);
+    if (socket->isWritable()) {
+        socket->write(data);
+    }
 }
 
 void FrigoConnection::handleError(QAbstractSocket::SocketError)
