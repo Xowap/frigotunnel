@@ -7,6 +7,7 @@
 #include <QHostAddress>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QDateTime>
 
 FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
     QObject(parent),
@@ -24,6 +25,10 @@ FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
     connect(&helloTimer, &QTimer::timeout, this, &FrigoTunnel::sayHello);
     helloTimer.setInterval(FRIGO_HELLO_INTERVAL_MSEC);
     helloTimer.start();
+
+    connect(&clockTimer, &QTimer::timeout, this, &FrigoTunnel::checkClock);
+    clockTimer.setInterval(FRIGO_HELLO_INTERVAL_MSEC);
+    clockTimer.start();
 }
 
 FrigoTunnel::~FrigoTunnel()
@@ -55,9 +60,14 @@ const ConnectionMap FrigoTunnel::getConnections()
     return connections;
 }
 
-QString FrigoTunnel::getSenderId()
+QString FrigoTunnel::getSenderId(bool regenerate)
 {
-    static QString senderId = QUuid::createUuid().toString();
+    static QString senderId = makeSenderId();
+
+    if (regenerate) {
+        senderId = makeSenderId();
+    }
+
     return senderId;
 }
 
@@ -262,6 +272,27 @@ void FrigoTunnel::bindUdp()
 
     QTimer::singleShot(timeoutGenerator->generate(), this, SLOT(bindUdp()));
     connect(udpSocket, SIGNAL(readyRead()), this, SLOT(inboundDatagram()));
+}
+
+void FrigoTunnel::checkClock()
+{
+    static qint64 lastDiff = 0;
+    qint64 diff = (FrigoClock::getTime() / 1000000) - QDateTime::currentMSecsSinceEpoch();
+
+    qDebug() << "diff" << diff << lastDiff;
+
+    if (qAbs(diff - lastDiff) > 1000) {
+        getSenderId(true);
+        shifts.clear();
+        qDebug() << "CLOCK RESET";
+    }
+
+    lastDiff = diff;
+}
+
+QString FrigoTunnel::makeSenderId()
+{
+    return QUuid::createUuid().toString();
 }
 
 void FrigoTunnel::setupTcp()

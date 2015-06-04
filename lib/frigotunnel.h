@@ -31,7 +31,7 @@ public:
     void send(FrigoPacket *packet, bool skipTcp = false, int udpSends = 5);
     const ConnectionMap getConnections();
 
-    static QString getSenderId();
+    static QString getSenderId(bool regenerate = false);
 
 private slots:
     void inboundDatagram();
@@ -44,6 +44,10 @@ private slots:
     void sayHello();
     void gotHello(const QString &name, const QHostAddress &peer);
     void bindUdp();
+    void checkClock();
+
+private:
+    static QString makeSenderId();
 
 signals:
     void gotMessage(const QJsonObject &message);
@@ -57,8 +61,9 @@ private:
     QByteArray tcpBuffer;
     ConnectionMap connections;
     TimeoutGenerator *timeoutGenerator;
-    QTimer helloTimer;
+    QTimer helloTimer, clockTimer;
     ShiftMap shifts;
+    QString senderId;
 
     void setupUdp();
     void setupTcp();
