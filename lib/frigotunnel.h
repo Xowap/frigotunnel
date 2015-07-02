@@ -8,6 +8,8 @@
 #include <QByteArray>
 #include <QMap>
 #include <QTimer>
+#include <QIODevice>
+#include <QQueue>
 
 #include "frigopacket.h"
 #include "expiringset.h"
@@ -39,12 +41,14 @@ private slots:
     void inboundTcpConnection();
     void inboundTcpData();
     void inboundSystemMessage(const QJsonObject &message, const QHostAddress &peer);
+    void inboundRadioData();
 
     void askHello();
     void sayHello();
     void gotHello(const QString &name, const QHostAddress &peer);
     void bindUdp();
     void checkClock();
+    void sendNextRadioPacket();
 
 private:
     static QString makeSenderId();
@@ -64,9 +68,16 @@ private:
     QTimer helloTimer, clockTimer;
     ShiftMap shifts;
     QString senderId;
+    QIODevice *radioSocket;
+    QHostAddress localIp;
+    QQueue<QByteArray> sendQueue;
+    bool radioSending;
 
     void setupUdp();
     void setupTcp();
+    void setupRadio();
+
+    void sendRadio(const QByteArray &data);
 
     void accountShift(FrigoPacket *packet, const QHostAddress &peer);
 };

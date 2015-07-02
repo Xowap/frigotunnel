@@ -3,6 +3,7 @@
 
 #include <QTimer>
 #include <QtDebug>
+#include <QtEndian>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -35,7 +36,14 @@ const QHostAddress FrigoConnection::getHost()
 void FrigoConnection::write(const QByteArray &data)
 {
     if (socket->isWritable()) {
-        socket->write(data);
+        QByteArray realData;
+
+        qint32 size = qToLittleEndian(data.size()), sizeCheck = qToLittleEndian(size ^ FRIGO_TCP_DATA_SIZE_KEY);
+        realData.append((char*)(void*) &size, sizeof(qint32));
+        realData.append((char*)(void*) &sizeCheck, sizeof(qint32));
+        realData.append(data);
+
+        socket->write(realData);
     }
 }
 

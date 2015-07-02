@@ -6,8 +6,7 @@
 
 include(../defaults.pri)
 
-QT       += network
-
+QT       += network script
 QT       -= gui
 
 TARGET = frigotunnel
@@ -35,4 +34,8 @@ HEADERS += \
 unix {
     target.path = /usr/lib
     INSTALLS += target
+}
+
+!android {
+    QT += serialport
 }
