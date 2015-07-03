@@ -22,7 +22,8 @@ FrigoTunnel::FrigoTunnel(const QString &name, const QStringList &radioDevices, Q
     timeoutGenerator(new TimeoutGenerator(FRIGO_TCP_RECONNECT_MIN, FRIGO_TCP_RECONNECT_MAX, this)),
     radioSocket(NULL),
     radioDevices(radioDevices),
-    radioSending(false)
+    radioSending(false),
+    wifiEnabled(true)
 {
     connect(this, &FrigoTunnel::gotSystemMessage, this, &FrigoTunnel::inboundSystemMessage);
 
@@ -46,24 +47,23 @@ FrigoTunnel::~FrigoTunnel()
 
 void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp, int udpSends)
 {
-//    QUdpSocket socket;
-//    QByteArray data = packet->serialize();
-//    QHostAddress target(FRIGO_MULTICAST_ADDRESS);
-
-//    for (int i = 0; i < udpSends; i += 1) {
-//        socket.writeDatagram(data, target, FRIGO_UDP_PORT);
-//    }
-
     sendRadio(packet->serializeBinary());
 
-    qDebug() << "Sending packet..." << skipTcp << udpSends;
+    if (wifiEnabled) {
+        QUdpSocket socket;
+        QByteArray data = packet->serialize();
+        QHostAddress target(FRIGO_MULTICAST_ADDRESS);
 
-//    if (!skipTcp) {
-//        for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
-//            (*i)->write(data);
-//            qDebug() << " ... to" << i.value()->getHost();
-//        }
-//    }
+        for (int i = 0; i < udpSends; i += 1) {
+            socket.writeDatagram(data, target, FRIGO_UDP_PORT);
+        }
+
+        if (!skipTcp) {
+            for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
+                (*i)->write(data);
+            }
+        }
+    }
 }
 
 const ConnectionMap FrigoTunnel::getConnections()
@@ -80,6 +80,17 @@ QString FrigoTunnel::getSenderId(bool regenerate)
     }
 
     return senderId;
+}
+
+void FrigoTunnel::setWifiEnabled(bool enabled)
+{
+    this->wifiEnabled = enabled;
+
+    if (enabled) {
+        qDebug() << "enabled wifi";
+    } else {
+        qDebug() << "disabled wifi";
+    }
 }
 
 void FrigoTunnel::inboundDatagram()

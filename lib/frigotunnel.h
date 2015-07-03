@@ -35,6 +35,9 @@ public:
 
     static QString getSenderId(bool regenerate = false);
 
+public slots:
+    void setWifiEnabled(bool enabled);
+
 private slots:
     void inboundDatagram();
     void inboundPacket(FrigoPacket *packet, QHostAddress peer);
@@ -73,6 +76,7 @@ private:
     QQueue<QByteArray> sendQueue;
     QStringList radioDevices;
     bool radioSending;
+    bool wifiEnabled;
 
     void setupUdp();
     void setupTcp();
