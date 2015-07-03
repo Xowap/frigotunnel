@@ -47,14 +47,14 @@ FrigoTunnel::~FrigoTunnel()
 void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp, int udpSends)
 {
 //    QUdpSocket socket;
-    QByteArray data = packet->serialize();
+//    QByteArray data = packet->serialize();
 //    QHostAddress target(FRIGO_MULTICAST_ADDRESS);
 
 //    for (int i = 0; i < udpSends; i += 1) {
 //        socket.writeDatagram(data, target, FRIGO_UDP_PORT);
 //    }
 
-    sendRadio(data);
+    sendRadio(packet->serializeBinary());
 
     qDebug() << "Sending packet..." << skipTcp << udpSends;
 
@@ -243,7 +243,7 @@ void FrigoTunnel::inboundRadioData()
         }
 
         QByteArray data(buf.data() + headerSize, dataSize);
-        FrigoPacket *packet = FrigoPacket::parse(data);
+        FrigoPacket *packet = FrigoPacket::parseBinary(data);
 
         buf.clear();
 

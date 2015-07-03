@@ -15,6 +15,7 @@ private slots:
     void testParseValidPacket();
     void testParseInvalidPacket();
     void testSenderFollowUp();
+    void testBinaryParse();
 };
 
 #endif // PARSEPACKETTEST_H

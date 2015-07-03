@@ -32,8 +32,10 @@ public:
 
     QJsonObject toJson() const;
     QByteArray serialize() const;
+    QByteArray serializeBinary() const;
     static FrigoPacket *parse(const QByteArray &data, QObject *parent = 0);
     static FrigoPacket *parse(const QJsonObject &obj, QObject *parent = 0);
+    static FrigoPacket *parseBinary(const QByteArray &data, QObject *parent = 0);
 
 private:
     FrigoMessageList messages;

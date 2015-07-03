@@ -30,8 +30,10 @@ public:
 
     QJsonObject toJson();
     QByteArray serialize();
+    QByteArray serializeBinary();
     static FrigoMessage *parse(const QByteArray &data, QObject *parent = 0);
     static FrigoMessage *parse(const QJsonObject &obj, QObject *parent = 0);
+    static FrigoMessage *parseBinary(const QByteArray &data, QObject *parent = 0);
 
 private:
     QUuid uuid;

@@ -6,6 +6,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QtEndian>
+#include <QDataStream>
 
 FrigoPacket::FrigoPacket(QObject *parent) :
     QObject(parent)
@@ -103,6 +105,33 @@ QByteArray FrigoPacket::serialize() const
     return QJsonDocument(toJson()).toJson();
 }
 
+QByteArray FrigoPacket::serializeBinary() const
+{
+    QByteArray out;
+    QDataStream ds(&out, QIODevice::WriteOnly);
+    ds.setByteOrder(QDataStream::LittleEndian);
+
+    ds << (quint8) FRIGO_PROTOCOL_VERSION;
+
+    QByteArray senderBytes = FrigoTunnel::getSenderId().toUtf8();
+    ds << (quint8) senderBytes.length();
+    ds.writeRawData(senderBytes.data(), senderBytes.length());
+
+    ds << FrigoClock::getTime();
+
+    ds << (quint8) messages.length();
+    foreach (FrigoMessage *message, messages) {
+        QByteArray messageBytes = message->serializeBinary();
+
+        if (messageBytes.length() <= 0xff) {
+            ds << (quint8) messageBytes.length();
+            ds.writeRawData(messageBytes.data(), messageBytes.length());
+        }
+    }
+
+    return out;
+}
+
 FrigoPacket *FrigoPacket::parse(const QByteArray &data, QObject *parent)
 {
     QJsonParseError jsonError;
@@ -142,6 +171,49 @@ FrigoPacket *FrigoPacket::parse(const QJsonObject &obj, QObject *parent)
         }
 
         FrigoMessage *message = FrigoMessage::parse(value.toObject(), packet);
+
+        if (message == NULL) {
+            return NULL;
+        }
+
+        packet->messages << message;
+    }
+
+    return packet;
+}
+
+FrigoPacket *FrigoPacket::parseBinary(const QByteArray &data, QObject *parent)
+{
+    QDataStream ds(data);
+    FrigoPacket *packet = new FrigoPacket(parent);
+
+    ds.setByteOrder(QDataStream::LittleEndian);
+
+    quint8 version;
+    ds >> version;
+
+    if (version != FRIGO_PROTOCOL_VERSION) {
+        return NULL;
+    }
+
+    quint8 senderSize;
+    ds >> senderSize;
+    QByteArray senderBytes(senderSize, '\0');
+    ds.readRawData(senderBytes.data(), senderSize);
+    packet->senderId = QString(senderBytes);
+
+    ds >> packet->time;
+
+    quint8 msgCount;
+    ds >> msgCount;
+
+    for (int i = 0; i < msgCount; i += 1) {
+        quint8 msgSize;
+        ds >> msgSize;
+        QByteArray msgBytes(msgSize, '\0');
+        ds.readRawData(msgBytes.data(), msgSize);
+
+        FrigoMessage *message = FrigoMessage::parseBinary(msgBytes, packet);
 
         if (message == NULL) {
             return NULL;

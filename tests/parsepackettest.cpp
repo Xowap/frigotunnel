@@ -1,6 +1,7 @@
 #include "parsepackettest.h"
 #include "frigopacket.h"
 #include "expiringset.h"
+#include "frigotunnel.h"
 
 #include <QFile>
 
@@ -31,13 +32,14 @@ void ParsePacketTest::testParseValidPacket()
 }
 
 void ParsePacketTest::testParseInvalidPacket()
-{    QFile f(":/tests/packet2.json");
+{
+    QFile f(":/tests/packet2.json");
 
-     QCOMPARE(f.open(QFile::ReadOnly), true);
+    QCOMPARE(f.open(QFile::ReadOnly), true);
 
-     FrigoPacket *packet = FrigoPacket::parse(f.readAll());
+    FrigoPacket *packet = FrigoPacket::parse(f.readAll());
 
-      QVERIFY(packet == NULL);
+    QVERIFY(packet == NULL);
 }
 
 void ParsePacketTest::testSenderFollowUp()
@@ -49,4 +51,17 @@ void ParsePacketTest::testSenderFollowUp()
     FrigoPacket *packet = FrigoPacket::parse(f.readAll());
 
     QCOMPARE(packet->getSenderId(), QString("super-sender"));
+}
+
+void ParsePacketTest::testBinaryParse()
+{
+    QFile f(":/tests/packet1.json");
+    QCOMPARE(f.open(QFile::ReadOnly), true);
+    FrigoPacket *packet = FrigoPacket::parse(f.readAll());
+
+    QByteArray bin = packet->serializeBinary();
+    qDebug() << "Packet Size" << bin.length();
+    FrigoPacket *parsed = FrigoPacket::parseBinary(bin);
+    QVERIFY(parsed != NULL);
+    QVERIFY(parsed->getSenderId() == FrigoTunnel::getSenderId());
 }
