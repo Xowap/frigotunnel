@@ -27,7 +27,7 @@ class FrigoTunnel : public QObject
     friend class FrigoTunnelTest;
 
 public:
-    FrigoTunnel(QString name, QObject *parent = 0);
+    FrigoTunnel(const QString &name, const QStringList &radioDevices = QStringList(), QObject *parent = 0);
     ~FrigoTunnel();
 
     void send(FrigoPacket *packet, bool skipTcp = false, int udpSends = 5);
@@ -71,6 +71,7 @@ private:
     QIODevice *radioSocket;
     QHostAddress localIp;
     QQueue<QByteArray> sendQueue;
+    QStringList radioDevices;
     bool radioSending;
 
     void setupUdp();

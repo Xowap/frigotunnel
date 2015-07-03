@@ -14,13 +14,14 @@
 #include <QtSerialPort/QtSerialPort>
 #endif
 
-FrigoTunnel::FrigoTunnel(QString name, QObject *parent) :
+FrigoTunnel::FrigoTunnel(const QString &name, const QStringList &radioDevices, QObject *parent) :
     QObject(parent),
     name(name),
     uuidSet(new ExpiringSet(3, FRIGO_UUID_TTL / 2, this)),
     udpSocket(new QUdpSocket(this)),
     timeoutGenerator(new TimeoutGenerator(FRIGO_TCP_RECONNECT_MIN, FRIGO_TCP_RECONNECT_MAX, this)),
     radioSocket(NULL),
+    radioDevices(radioDevices),
     radioSending(false)
 {
     connect(this, &FrigoTunnel::gotSystemMessage, this, &FrigoTunnel::inboundSystemMessage);
@@ -45,24 +46,24 @@ FrigoTunnel::~FrigoTunnel()
 
 void FrigoTunnel::send(FrigoPacket *packet, bool skipTcp, int udpSends)
 {
-    QUdpSocket socket;
+//    QUdpSocket socket;
     QByteArray data = packet->serialize();
-    QHostAddress target(FRIGO_MULTICAST_ADDRESS);
+//    QHostAddress target(FRIGO_MULTICAST_ADDRESS);
 
-    for (int i = 0; i < udpSends; i += 1) {
-        socket.writeDatagram(data, target, FRIGO_UDP_PORT);
-    }
+//    for (int i = 0; i < udpSends; i += 1) {
+//        socket.writeDatagram(data, target, FRIGO_UDP_PORT);
+//    }
 
     sendRadio(data);
 
     qDebug() << "Sending packet..." << skipTcp << udpSends;
 
-    if (!skipTcp) {
-        for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
-            (*i)->write(data);
-            qDebug() << " ... to" << i.value()->getHost();
-        }
-    }
+//    if (!skipTcp) {
+//        for(ConnectionMap::iterator i = connections.begin(); i != connections.end(); i++) {
+//            (*i)->write(data);
+//            qDebug() << " ... to" << i.value()->getHost();
+//        }
+//    }
 }
 
 const ConnectionMap FrigoTunnel::getConnections()
@@ -208,9 +209,20 @@ void FrigoTunnel::inboundRadioData()
 {
     static QByteArray buf;
     int headerSize = sizeof(qint16) * 2 + sizeof(quint32);
+    int i;
 
     while (radioSocket->bytesAvailable()) {
         buf.append(radioSocket->readAll());
+    }
+
+    for (i = 0; i < buf.length(); i += 1) {
+        if (buf.at(i) != 0) {
+            break;
+        }
+    }
+
+    if (i > 0) {
+        buf = QByteArray(buf.data() + i, buf.size() - i);
     }
 
     while (buf.size() > headerSize) {
@@ -222,22 +234,22 @@ void FrigoTunnel::inboundRadioData()
         ipInt = qFromLittleEndian(*(quint32*)(void*)(buf.data() + sizeof(qint16) * 2));
 
         if (dataSize != (dataSizeCheck ^ FRIGO_TCP_DATA_SIZE_KEY)) {
-            buf.clear();
+            buf = QByteArray(buf.data() + 1, buf.size() - 1);
+            continue;
         }
 
         if (buf.size() < (headerSize + dataSize)) {
             break;
         }
 
-        QByteArray compressed(buf.data() + headerSize, dataSize);
-        QByteArray data = qUncompress(compressed);
+        QByteArray data(buf.data() + headerSize, dataSize);
         FrigoPacket *packet = FrigoPacket::parse(data);
 
-        if (packet == NULL) {
-            continue;
-        }
+        buf.clear();
 
-        inboundPacket(packet, QHostAddress(ipInt));
+        if (packet != NULL) {
+            inboundPacket(packet, QHostAddress(ipInt));
+        }
     }
 }
 
@@ -353,23 +365,25 @@ void FrigoTunnel::setupRadio()
 #ifndef Q_OS_ANDROID
     QSerialPort *port = new QSerialPort(this);
 
-    port->setPortName("/dev/ttyUSB0");
-    port->setBaudRate(19200);
-    port->setDataBits(QSerialPort::Data8);
-    port->setStopBits(QSerialPort::OneStop);
-    port->setParity(QSerialPort::NoParity);
+    foreach (const QString &device, radioDevices) {
+        port->setPortName(device);
+        port->setBaudRate(19200);
+        port->setDataBits(QSerialPort::Data8);
+        port->setStopBits(QSerialPort::OneStop);
+        port->setParity(QSerialPort::NoParity);
 
-    if (port->open(QSerialPort::ReadWrite)) {
-        radioSocket = port;
-
-        QByteArray setupSequence("ER_CMD#A41\n");
-        port->write(setupSequence);
+        if (port->open(QSerialPort::ReadWrite)) {
+            radioSocket = port;
+            break;
+        }
     }
-#else
-    QTcpSocket *tcpPort = new QTcpSocket(this);
-    tcpPort->connectToHost(QHostAddress::LocalHost, FRIGO_RADIO_PORT);
-    radioSocket = tcpPort;
 #endif
+
+    if (radioSocket == NULL) {
+        QTcpSocket *tcpPort = new QTcpSocket(this);
+        tcpPort->connectToHost(QHostAddress::LocalHost, FRIGO_RADIO_PORT);
+        radioSocket = tcpPort;
+    }
 
     connect(radioSocket, &QIODevice::readyRead, this, &FrigoTunnel::inboundRadioData);
 
@@ -386,16 +400,15 @@ void FrigoTunnel::setupRadio()
 void FrigoTunnel::sendRadio(const QByteArray &data)
 {
      if (radioSocket != NULL && radioSocket->isWritable()) {
-         QByteArray compressed = qCompress(data, 9);
          QByteArray realData;
 
-         qint16 size = qToLittleEndian(compressed.size()), sizeCheck = qToLittleEndian(size ^ FRIGO_TCP_DATA_SIZE_KEY);
+         qint16 size = qToLittleEndian(data.size()), sizeCheck = qToLittleEndian(size ^ FRIGO_TCP_DATA_SIZE_KEY);
          quint32 ip = qToLittleEndian(localIp.toIPv4Address());
 
          realData.append((char*)(void*) &size, sizeof(qint16));
          realData.append((char*)(void*) &sizeCheck, sizeof(qint16));
          realData.append((char*)(void*) &ip, sizeof(quint32));
-         realData.append(compressed);
+         realData.append(data);
 
          if (sendQueue.size() > FRIGO_RADIO_QUEUE_SIZE) {
              sendQueue.clear();
@@ -420,8 +433,9 @@ void FrigoTunnel::sendNextRadioPacket()
     radioSending = true;
 
     if (!sendQueue.isEmpty()) {
-        radioSocket->write(sendQueue.dequeue());
-        QTimer::singleShot(300, this, SLOT(sendNextRadioPacket()));
+        QByteArray data = sendQueue.dequeue();
+        radioSocket->write(data);
+        QTimer::singleShot(500, this, SLOT(sendNextRadioPacket()));
     } else {
         radioSending = false;
     }
